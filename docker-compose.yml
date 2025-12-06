@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  python-app:
+    build: .
+    container_name: excel_bot
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    working_dir: /app
