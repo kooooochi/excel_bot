@@ -1,7 +1,3 @@
-# Excel input files (don't commit user data)
-input/*.xlsx
-input/*.xls
-
 # Keep the directory structure
 !input/.gitkeep
 
