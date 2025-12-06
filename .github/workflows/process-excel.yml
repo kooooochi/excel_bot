@@ -2,6 +2,8 @@ name: Process Excel Files
 
 on:
   pull_request:
+    branches:
+      - 'process/**'
     paths:
       - 'input/**/*.xlsx'
       - 'input/**/*.xls'
