@@ -22,7 +22,7 @@ docker-compose up -d
 cp your_file.xlsx input/
 
 # 3. 処理を実行
-docker-compose exec python-app python process_excel.py
+docker-compose exec excel_bot python process_excel.py
 
 # 4. 結果を確認
 ls output/
@@ -31,8 +31,8 @@ ls output/
 ### サンプルデータで試す
 
 ```bash
-docker-compose exec python-app python create_sample_data.py
-docker-compose exec python-app python process_excel.py
+docker-compose exec excel_bot python create_sample_data.py
+docker-compose exec excel_bot python process_excel.py
 ```
 
 ## GitHub Actionsで自動処理
