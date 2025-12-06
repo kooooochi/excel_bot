@@ -39,18 +39,21 @@ docker-compose exec excel_bot python process_excel.py
 
 ### 動作条件
 
-PRで`input/`ディレクトリ内の`.xlsx`または`.xls`ファイルが変更されたとき自動実行されます。
+以下の条件を**すべて**満たす場合に自動実行されます:
+
+- **ブランチ名**: `process/`で始まるブランチからのPR（例: `process/update-data`、`process/feature-1`）
+- **変更ファイル**: `input/`ディレクトリ内の`.xlsx`または`.xls`ファイルが変更されている
 
 ### 使用手順
 
 ```bash
-# 1. ブランチを作成
-git checkout -b feature/process-data
+# 1. process/で始まるブランチを作成
+git checkout -b process/update-data
 
 # 2. Excelファイルを追加
 git add input/your_file.xlsx
 git commit -m "Add Excel file for processing"
-git push origin feature/process-data
+git push origin process/update-data
 
 # 3. PRを作成
 # GitHub上でPull Requestを作成
