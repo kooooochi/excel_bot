@@ -33,7 +33,7 @@ jobs:
 
       - name: Process Excel files
         run: |
-          python process_excel.py
+          python run_processor.py
 
       - name: Upload processed files
         uses: actions/upload-artifact@v4
