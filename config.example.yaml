@@ -1,0 +1,33 @@
+# Excel Processor 設定ファイル
+
+# 入力・出力ディレクトリの設定
+input_dir: "input"
+output_dir: "output"
+
+# 適用するプロセッサーのリスト
+processors:
+  # サンプル1: サマリーシートを追加するプロセッサー
+  - name: "SummarySheetProcessor"
+    enabled: true
+    config:
+      sheet_name: "Summary"
+      position: 0  # 先頭に挿入
+
+  # サンプル2: データを集計するプロセッサー
+  - name: "AggregationProcessor"
+    enabled: true
+    config:
+      target_sheet: "Sheet1"
+      output_sheet: "Aggregated"
+
+  # サンプル3: フォーマットを適用するプロセッサー
+  - name: "FormatProcessor"
+    enabled: true
+    config:
+      header_color: "4472C4"
+      font_name: "Arial"
+      font_size: 11
+
+# カスタムプロセッサーのモジュールパス
+# ユーザー定義のプロセッサーがあるディレクトリを指定
+custom_processors_path: "excel_processor/processors"
