@@ -94,14 +94,14 @@ class ExcelProcessor:
                 print(f"Error in processor {processor.__class__.__name__}: {e}")
                 raise
 
-        # 出力ファイルに保存
+        # 処理済みファイルを保存
         output_file = self.output_dir / input_file.name
         workbook.save(output_file)
         print(f"Saved: {output_file.name}")
 
-        # 元のファイルを出力ディレクトリに移動
-        shutil.move(str(input_file), str(output_file))
-        print(f"Moved: {input_file.name} -> {self.output_dir}")
+        # 元のファイルを削除（処理済みファイルは既に保存済み）
+        input_file.unlink()
+        print(f"Removed original: {input_file.name}")
 
     def add_processor(self, processor: BaseSheetProcessor):
         """プロセッサーを追加"""
