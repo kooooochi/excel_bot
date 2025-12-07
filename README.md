@@ -1,38 +1,71 @@
-# Excel Processing with GitHub Actions
+# Excel Processor
 
-Excelファイルを自動処理するシステム。ローカル実行とGitHub Actionsによる自動処理に対応。
+柔軟でカスタマイズ可能なExcel処理ライブラリ。ローカル実行とGitHub Actionsによる自動処理に対応。
 
 ## 概要
 
-`input/`ディレクトリのExcelファイルを処理し、結果を`output/`ディレクトリに出力します。
+`input/`ディレクトリのExcelファイルを処理し、タイムスタンプ付きディレクトリ（`output/YYYY-MM-DD_HHMMSS/`）に結果を出力します。
 
-## ローカルで実行
+## 主な機能
 
-### 前提条件
-- Docker
-- Docker Compose
+- **汎用的な処理フレームワーク**: プラグイン形式で様々な処理を追加可能
+- **YAML設定**: 処理内容を設定ファイルで柔軟に制御
+- **組み込みプロセッサー**: サマリーシート追加、書式設定など
+- **カスタムプロセッサー**: 独自の処理ロジックを簡単に実装
+- **タイムスタンプ管理**: 処理結果を日時別に自動整理
 
-### 実行手順
+## クイックスタート
+
+### 1. 基本的な使い方
 
 ```bash
-# 1. コンテナを起動
-docker-compose up -d
-
-# 2. Excelファイルをinputディレクトリに配置
+# Excelファイルをinputディレクトリに配置
 cp your_file.xlsx input/
 
-# 3. 処理を実行
-docker-compose exec excel_bot python process_excel.py
+# 処理を実行（デフォルト設定を使用）
+python run_processor.py
 
-# 4. 結果を確認
+# 結果を確認
 ls output/
 ```
 
-### サンプルデータで試す
+処理結果は `output/YYYY-MM-DD_HHMMSS/` ディレクトリに保存されます。
+
+### 2. 設定をカスタマイズ
+
+[config.yaml](config.yaml)を編集して処理内容を変更できます:
+
+```yaml
+processors:
+  - name: "SummarySheetProcessor"
+    enabled: true
+    config:
+      sheet_name: "Summary"
+      position: 0
+
+  - name: "FormatProcessor"
+    enabled: true
+    config:
+      header_color: "4472C4"
+```
+
+詳細は [LIBRARY_GUIDE.md](LIBRARY_GUIDE.md) を参照してください。
+
+## Dockerで実行
 
 ```bash
+# コンテナを起動
+docker-compose up -d
+
+# Excelファイルを配置
+cp your_file.xlsx input/
+
+# 処理を実行
+docker-compose exec excel_bot python run_processor.py
+
+# サンプルデータで試す
 docker-compose exec excel_bot python create_sample_data.py
-docker-compose exec excel_bot python process_excel.py
+docker-compose exec excel_bot python run_processor.py
 ```
 
 ## GitHub Actionsで自動処理
@@ -64,23 +97,57 @@ git push origin process/update-data
 - **Artifacts**: GitHub ActionsのArtifactsタブからダウンロード（30日間保存）
 - **コミット**: 処理済みファイルが`output/`ディレクトリに自動コミットされます
 
-## カスタマイズ
+## カスタムプロセッサーの作成
 
-処理ロジックを変更する場合は`process_excel.py`の`process_excel_file`関数を編集してください。
+独自の処理ロジックを実装できます。詳細は [LIBRARY_GUIDE.md](LIBRARY_GUIDE.md) を参照してください。
+
+### 簡単な例
 
 ```python
-def process_excel_file(input_path, output_path):
-    df = pd.read_excel(input_path)
+# excel_processor/processors/my_processor.py
+from openpyxl.workbook import Workbook
+from excel_processor.base_processor import BaseSheetProcessor
 
-    # ここに処理を追加
-    df['new_column'] = df['existing_column'] * 2
+class MyProcessor(BaseSheetProcessor):
+    def process(self, workbook: Workbook, file_path: str) -> Workbook:
+        # カスタム処理を実装
+        for sheet_name in workbook.sheetnames:
+            ws = workbook[sheet_name]
+            # 処理内容...
 
-    df.to_excel(output_path, index=False)
+        return workbook
 ```
+
+[run_processor.py](run_processor.py)に登録して、[config.yaml](config.yaml)で有効化します。
 
 ## 技術スタック
 
 - Python 3.11
-- pandas, openpyxl, numpy, tqdm
+- pandas, openpyxl, numpy, tqdm, pyyaml
 - Docker / Docker Compose
 - GitHub Actions
+
+## ドキュメント
+
+- [LIBRARY_GUIDE.md](LIBRARY_GUIDE.md) - ライブラリの詳細ガイド
+- [config.yaml](config.yaml) - 設定ファイルのサンプル
+- [process_excel.ipynb](process_excel.ipynb) - openpyxlのチュートリアル
+
+## ディレクトリ構造
+
+```text
+excel_bot/
+├── excel_processor/          # ライブラリ本体
+│   ├── __init__.py
+│   ├── core.py              # メインエンジン
+│   ├── base_processor.py    # ベースクラス
+│   └── processors/          # プロセッサー
+│       ├── summary_sheet.py
+│       └── format_processor.py
+├── input/                   # 入力ファイル
+├── output/                  # 出力ファイル（タイムスタンプ別）
+│   └── YYYY-MM-DD_HHMMSS/
+├── config.yaml              # 設定ファイル
+├── run_processor.py         # 実行スクリプト
+└── LIBRARY_GUIDE.md         # ライブラリガイド
+```
