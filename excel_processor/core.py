@@ -4,7 +4,7 @@ import os
 import sys
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Type
 import openpyxl
 from tqdm import tqdm
@@ -17,7 +17,7 @@ class ExcelProcessor:
     Excel処理のメインクラス
 
     inputディレクトリのExcelファイルを処理し、
-    タイムスタンプ付きディレクトリにoutputとして保存します。
+    タイムスタンプ（JST:日本時間）付きディレクトリにoutputとして保存します。
     """
 
     def __init__(
@@ -35,7 +35,8 @@ class ExcelProcessor:
         self.input_dir = Path(input_dir)
         self.output_base_dir = Path(output_dir)
         self.processors = processors or []
-        self.timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        JST = timezone(timedelta(hours=9))
+        self.timestamp = datetime.now(JST).strftime("%Y-%m-%d_%H%M%S")
         self.output_dir = self.output_base_dir / self.timestamp
 
     def run(self):
