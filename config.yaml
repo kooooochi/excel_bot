@@ -1,0 +1,25 @@
+# Excel Processor 設定ファイル
+
+# 入力・出力ディレクトリの設定
+input_dir: "input"
+output_dir: "output"
+
+# 適用するプロセッサーのリスト
+processors:
+  # サマリーシートを追加
+  - name: "SummarySheetProcessor"
+    enabled: true
+    config:
+      sheet_name: "Summary"
+      position: 0  # 先頭に挿入
+
+  # フォーマットを適用
+  - name: "FormatProcessor"
+    enabled: true
+    config:
+      header_color: "4472C4"
+      font_name: "Arial"
+      font_size: 11
+      apply_borders: true
+      auto_width: true
+      exclude_sheets: ["Summary"]  # サマリーシートは除外
