@@ -2,8 +2,6 @@ name: Process Excel Files
 
 on:
   pull_request:
-    branches:
-      - 'process/**'
     paths:
       - 'input/**/*.xlsx'
       - 'input/**/*.xls'
@@ -12,6 +10,8 @@ on:
 jobs:
   process-excel:
     runs-on: ubuntu-latest
+    # Only run if source branch matches process/**
+    if: startsWith(github.head_ref, 'process/')
     permissions:
       contents: write
 
