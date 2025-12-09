@@ -20,6 +20,7 @@ processors:
       header_color: "4472C4"
       font_name: "Arial"
       font_size: 11
+      font_color: "FFFFFF"
       apply_borders: true
       auto_width: true
       exclude_sheets: ["Summary"]  # サマリーシートは除外

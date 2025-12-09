@@ -7,7 +7,8 @@ from pathlib import Path
 import yaml
 
 from excel_processor import ExcelProcessor
-from excel_processor.processors import SummarySheetProcessor, FormatProcessor
+from excel_processor import processors
+from excel_processor.base_processor import BaseSheetProcessor
 
 
 def load_config(config_path: str = "config.yaml") -> dict:
@@ -60,17 +61,12 @@ def create_processor_instance(processor_config: dict):
     processor_name = processor_config['name']
     config = processor_config.get('config', {})
 
-    # 組み込みプロセッサー
-    BUILTIN_PROCESSORS = {
-        'SummarySheetProcessor': SummarySheetProcessor,
-        'FormatProcessor': FormatProcessor,
-    }
+    # 動的ロードされたプロセッサーからクラスを取得
+    processor_class = getattr(processors, processor_name, None)
 
-    if processor_name in BUILTIN_PROCESSORS:
-        return BUILTIN_PROCESSORS[processor_name](config)
+    if processor_class and issubclass(processor_class, BaseSheetProcessor):
+        return processor_class(config)
 
-    # カスタムプロセッサーの動的ロード
-    # TODO: カスタムプロセッサーの動的読み込み機能を実装
     raise ValueError(f"Unknown processor: {processor_name}")
 
 

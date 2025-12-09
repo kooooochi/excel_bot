@@ -14,6 +14,7 @@ class FormatProcessor(BaseSheetProcessor):
         header_color: "4472C4"  # ヘッダー背景色（16進数）
         font_name: "Arial"  # フォント名
         font_size: 11  # フォントサイズ
+        font_color: "FFFFFF"  # フォントカラー（16進数）
         apply_borders: true  # 罫線を適用するか
         auto_width: true  # 列幅を自動調整するか
         exclude_sheets: ["Summary"]  # 除外するシート名
@@ -23,6 +24,7 @@ class FormatProcessor(BaseSheetProcessor):
         header_color = self.config.get('header_color', '4472C4')
         font_name = self.config.get('font_name', 'Arial')
         font_size = self.config.get('font_size', 11)
+        font_color = self.config.get('font_color', "FFFFFF")
         apply_borders = self.config.get('apply_borders', True)
         auto_width = self.config.get('auto_width', True)
         exclude_sheets = self.config.get('exclude_sheets', [])
@@ -40,7 +42,7 @@ class FormatProcessor(BaseSheetProcessor):
             # ヘッダー行（1行目）のフォーマット
             if ws.max_row > 0:
                 for cell in ws[1]:
-                    cell.font = Font(name=font_name, size=font_size, bold=True, color='FFFFFF')
+                    cell.font = Font(name=font_name, size=font_size, bold=True, color=font_color)
                     cell.fill = PatternFill(start_color=header_color, end_color=header_color, fill_type='solid')
                     cell.alignment = Alignment(horizontal='center', vertical='center')
 
@@ -72,7 +74,7 @@ class FormatProcessor(BaseSheetProcessor):
                         if cell.value:
                             max_length = max(max_length, len(str(cell.value)))
 
-                    adjusted_width = min(max_length + 2, 50)
+                    adjusted_width = min(max_length * 2 + 4, 50)
                     ws.column_dimensions[column_letter].width = adjusted_width
 
         self.log("Formatting completed")

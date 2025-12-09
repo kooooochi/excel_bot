@@ -21,5 +21,8 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Local temp
+tmp/
+
 # Docker
 *.log

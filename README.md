@@ -10,7 +10,7 @@
 
 - **汎用的な処理フレームワーク**: プラグイン形式で様々な処理を追加可能
 - **YAML設定**: 処理内容を設定ファイルで柔軟に制御
-- **組み込みプロセッサー**: サマリーシート追加、書式設定など
+- **動的ロード**: `excel_processor/processors/` に配置したクラスを自動で読み込み
 - **カスタムプロセッサー**: 独自の処理ロジックを簡単に実装
 - **タイムスタンプ管理**: 処理結果を日時別に自動整理
 
@@ -118,7 +118,7 @@ class MyProcessor(BaseSheetProcessor):
         return workbook
 ```
 
-[run_processor.py](run_processor.py)に登録して、[config.yaml](config.yaml)で有効化します。
+`excel_processor/processors/` に置くだけで自動で読み込まれます。[config.yaml](config.yaml)の`processors[].name`にクラス名を記載して有効化してください。
 
 ## 技術スタック
 
@@ -142,8 +142,8 @@ excel_bot/
 │   ├── core.py              # メインエンジン
 │   ├── base_processor.py    # ベースクラス
 │   └── processors/          # プロセッサー
-│       ├── summary_sheet.py
-│       └── format_processor.py
+│       ├── summary_sheet.py   # サンプル
+│       └── format_processor.py # サンプル
 ├── input/                   # 入力ファイル
 ├── output/                  # 出力ファイル（タイムスタンプ別）
 │   └── YYYY-MM-DD_HHMMSS/
