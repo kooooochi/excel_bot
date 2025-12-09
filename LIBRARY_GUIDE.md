@@ -5,7 +5,7 @@ Excel Processorは、Excelファイルを柔軟に処理できる汎用的なPyt
 ## 特徴
 
 - **汎用的**: シート追加、書式設定、データ処理など、様々な処理をプラグイン形式で実装可能
-- **カスタマイズ可能**: ユーザー独自の処理ロジックを簡単に追加
+- **カスタマイズ可能**: `excel_processor/processors/`にファイルを置くだけで独自ロジックを追加
 - **YAML設定**: 処理内容を設定ファイルで柔軟に制御
 - **タイムスタンプ管理**: 処理結果を `YYYY-MM-DD_HHMMSS` 形式のディレクトリに自動保存
 
@@ -20,7 +20,7 @@ input_dir: "input"
 output_dir: "output"
 
 processors:
-  - name: "SummarySheetProcessor"
+  - name: "SummarySheetProcessor"   # クラス名（processors配下に定義）
     enabled: true
     config:
       sheet_name: "Summary"
@@ -54,41 +54,30 @@ python run_processor.py -i input -o output
 3. 処理結果を`output/YYYY-MM-DD_HHMMSS/`ディレクトリに保存
 4. 元のファイルを`input/`から移動
 
-## 組み込みプロセッサー
+## サンプルプロセッサー
 
-### SummarySheetProcessor
+`excel_processor/processors/` に配置済みのサンプルクラスです。必要に応じて編集・削除できます。
 
-サマリーシートを追加します。
+- `SummarySheetProcessor`: サマリーシートを追加し、処理日時・ファイル名・シート一覧などを記録
+- `FormatProcessor`: 全シートへ書式を適用（ヘッダー色、フォント、罫線、列幅調整など）
 
-**設定例:**
+設定例:
 ```yaml
 - name: "SummarySheetProcessor"
   enabled: true
   config:
-    sheet_name: "Summary"  # シート名
-    position: 0  # 挿入位置（0=先頭）
-```
+    sheet_name: "Summary"
+    position: 0
 
-**機能:**
-- 処理日時
-- ファイル名
-- シート一覧と各シートの行数・列数
-
-### FormatProcessor
-
-全シートに書式を適用します。
-
-**設定例:**
-```yaml
 - name: "FormatProcessor"
   enabled: true
   config:
-    header_color: "4472C4"  # ヘッダー背景色
-    font_name: "Arial"  # フォント名
-    font_size: 11  # フォントサイズ
-    apply_borders: true  # 罫線を適用
-    auto_width: true  # 列幅を自動調整
-    exclude_sheets: ["Summary"]  # 除外するシート
+    header_color: "4472C4"
+    font_name: "Arial"
+    font_size: 11
+    apply_borders: true
+    auto_width: true
+    exclude_sheets: ["Summary"]
 ```
 
 ## カスタムプロセッサーの作成
@@ -128,21 +117,7 @@ class MyCustomProcessor(BaseSheetProcessor):
         return workbook
 ```
 
-### 2. プロセッサーの登録
-
-[run_processor.py](run_processor.py)の`BUILTIN_PROCESSORS`に追加します。
-
-```python
-from excel_processor.processors.my_custom_processor import MyCustomProcessor
-
-BUILTIN_PROCESSORS = {
-    'SummarySheetProcessor': SummarySheetProcessor,
-    'FormatProcessor': FormatProcessor,
-    'MyCustomProcessor': MyCustomProcessor,  # 追加
-}
-```
-
-### 3. 設定ファイルで有効化
+### 2. 設定ファイルで有効化
 
 [config.yaml](config.yaml)に追加します。
 
@@ -153,6 +128,8 @@ processors:
     config:
       my_setting: "custom_value"
 ```
+
+> ポイント: `processors` 配下のすべてのモジュールが起動時に走査され、`BaseSheetProcessor` のサブクラスが自動で公開されます。追加の登録処理は不要です。
 
 ## カスタムプロセッサーの例
 
@@ -213,9 +190,9 @@ class AggregationProcessor(BaseSheetProcessor):
 
 ### プロセッサーが読み込まれない
 
-- プロセッサー名が正しいか確認
-- `BUILTIN_PROCESSORS`に登録されているか確認
-- インポート文が正しいか確認
+- プロセッサー名が正しいか確認（クラス名と`config.yaml`の`name`が一致しているか）
+- クラスが`BaseSheetProcessor`を継承しているか確認
+- `excel_processor/processors/`直下にファイルが配置されているか確認
 
 ### 設定が反映されない
 
