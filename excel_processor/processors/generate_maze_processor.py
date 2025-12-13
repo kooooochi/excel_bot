@@ -24,7 +24,7 @@ class GenerateMazeProcessor(BaseSheetProcessor):
         width: 10
     """
 
-    def process(self, workbook: Workbook, file_path: str) -> Workbook:
+    def process(self, workbook: Workbook, _file_path: str) -> Workbook:
         height = self.config.get("height", 10)
         width = self.config.get("width", 10)
 
@@ -74,6 +74,8 @@ def generate_maze(width, height):
     return : 迷路 2D 配列（壁=1, 道=0）、start座標、goal座標
     """
 
+    _validate_maze_size(width, height)
+
     maze = [[1 for _ in range(width)] for _ in range(height)]
 
     # 開始位置（ランダムな奇数座標）
@@ -121,6 +123,13 @@ def generate_maze(width, height):
             break
 
     return maze, start_coord, goal_coord
+
+
+def _validate_maze_size(width: int, height: int):
+    if width < 3 or height < 3:
+        raise ValueError("Maze width and height must be >= 3.")
+    if width % 2 == 0 or height % 2 == 0:
+        raise ValueError("Maze width and height must be odd numbers.")
 
 
 def print_maze(maze, start, goal):
@@ -266,16 +275,12 @@ def output_maze_result(workbook, maze, visit):
     """
     迷路、距離マップ、最短経路をそれぞれ別シートに出力する
     """
-    generate_sheet_names = {
-        "Maze": "Maze",
-        "Distance": "Distance",
-        "Path": "Path"
-    }
-    
-    for sheet_name in generate_sheet_names.values():
+    sheet_names = ("Maze", "Distance", "Path")
+
+    for sheet_name in sheet_names:
         if sheet_name in workbook.sheetnames:
             del workbook[sheet_name]
-    
+
     wall_fill = PatternFill(fill_type="solid", fgColor="404040")
     start_fill = PatternFill(fill_type="solid", fgColor="4CAF50")
     goal_fill = PatternFill(fill_type="solid", fgColor="F44336")
@@ -287,7 +292,7 @@ def output_maze_result(workbook, maze, visit):
     cell_size = 3  # おおよそ正方形に見える幅・高さ（単位: Excel の列幅/行高さ単位）
 
     # Maze シート
-    maze_ws = workbook.create_sheet(generate_sheet_names["Maze"])
+    maze_ws = workbook.create_sheet("Maze")
     maze_ws.sheet_view.showGridLines = False
     for y, row in enumerate(maze):
         for x, cell in enumerate(row):
@@ -310,7 +315,7 @@ def output_maze_result(workbook, maze, visit):
         maze_ws.row_dimensions[row_idx].height = cell_size * 5  # 行高さは幅より大きめ係数
 
     # Distance シート
-    dist_ws = workbook.create_sheet(generate_sheet_names["Distance"])
+    dist_ws = workbook.create_sheet("Distance")
     dist_ws.sheet_view.showGridLines = False
     visit_map = visit.get_visit_map()
     max_cost = max(max(row) for row in visit_map if row) or 0
@@ -332,7 +337,7 @@ def output_maze_result(workbook, maze, visit):
         dist_ws.row_dimensions[row_idx].height = cell_size * 5
 
     # Path シート
-    path_ws = workbook.create_sheet(generate_sheet_names["Path"])
+    path_ws = workbook.create_sheet("Path")
     path_ws.sheet_view.showGridLines = False
     path = visit.get_start_to_goal_path()
     step_lookup = {xy: idx for idx, xy in enumerate(path)}
