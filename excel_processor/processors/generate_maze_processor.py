@@ -1,10 +1,15 @@
 """サマリーシートを追加するプロセッサー"""
 
+import random
+import sys
+from collections import deque
 from datetime import datetime
-from openpyxl.workbook import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
 from excel_processor.base_processor import BaseSheetProcessor
-from datetime import datetime
 
 
 class GenerateMazeProcessor(BaseSheetProcessor):
@@ -18,23 +23,24 @@ class GenerateMazeProcessor(BaseSheetProcessor):
         height: 10
         width: 10
     """
+
     def process(self, workbook: Workbook, file_path: str) -> Workbook:
-        height = self.config.get('height', 10)
-        width = self.config.get('width', 10)
+        height = self.config.get("height", 10)
+        width = self.config.get("width", 10)
 
         maze, start, goal = self._run_with_timer(
             "generate_maze",
             generate_maze,
             width=width,
-            height=height
+            height=height,
         )
 
-        visit, path = self._run_with_timer(
+        visit = self._run_with_timer(
             "solver",
             solver,
             maze=maze,
             start=start,
-            goal=goal
+            goal=goal,
         )
 
         self._run_with_timer(
@@ -42,9 +48,7 @@ class GenerateMazeProcessor(BaseSheetProcessor):
             output_maze_result,
             workbook=workbook,
             maze=maze,
-            start=start,
-            goal=goal,
-            visit=visit
+            visit=visit,
         )
 
         return workbook
@@ -54,18 +58,14 @@ class GenerateMazeProcessor(BaseSheetProcessor):
         result = function(*args, **kwargs)
         end_time = datetime.now()
         elapsed_time = end_time - start_time
-        print(f"[{self.__class__.__name__}][{process_name}] 処理時間: {elapsed_time}（{elapsed_time.total_seconds():.3f} 秒）")
+        print(
+            f"[{self.__class__.__name__}][{process_name}] 処理時間: {elapsed_time}（{elapsed_time.total_seconds():.3f} 秒）"
+        )
         return result
 
 
-import random
-import sys
-from collections import deque
-from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Font, Alignment
-from openpyxl.utils import get_column_letter
-
 sys.setrecursionlimit(10**7)
+
 
 def generate_maze(width, height):
     """
@@ -101,26 +101,26 @@ def generate_maze(width, height):
     # --------------------------------------
 
     # Start = 左上の最初の通路
-    S = None
+    start_coord = None
     for y in range(height):
         for x in range(width):
             if maze[y][x] == 0:
-                S = (x, y)
+                start_coord = (x, y)
                 break
-        if S:
+        if start_coord:
             break
 
     # Goal = 右下の最後の通路
-    G = None
+    goal_coord = None
     for y in range(height - 1, -1, -1):
         for x in range(width - 1, -1, -1):
             if maze[y][x] == 0:
-                G = (x, y)
+                goal_coord = (x, y)
                 break
-        if G:
+        if goal_coord:
             break
 
-    return maze, S, G
+    return maze, start_coord, goal_coord
 
 
 def print_maze(maze, start, goal):
@@ -145,21 +145,21 @@ class State:
     def __init__(self, xy, cost):
         self._xy = xy
         self._cost = cost
-    
-    def getPosition(self):
+
+    def get_position(self):
         return self._xy
-    
-    def getCost(self):
+
+    def get_cost(self):
         return self._cost
-    
-    def getNextState(self, dx_dy):
+
+    def get_next_state(self, dx_dy):
         return State(
             (self._xy[0] + dx_dy[0], self._xy[1] + dx_dy[1]),
             self._cost + 1
         )
-        
-    
-    
+
+
+
 class Visit:
     def __init__(self, maze, start, goal):
         self._start = start
@@ -169,27 +169,35 @@ class Visit:
         self._visit = [[-1 for _ in range(self._width)] for _ in range(self._height)]
         self._path = [[(-1, -1) for _ in range(self._width)] for _ in range(self._height)]
         self._maze = maze
-    
-    def getCost(self, xy):
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def goal(self):
+        return self._goal
+
+    def get_cost(self, xy):
         return self._visit[xy[1]][xy[0]]
-    
-    def setCost(self, state):
-        xy = state.getPosition()
-        cost = state.getCost()
-        if not self.canMove(xy):
+
+    def set_cost(self, state):
+        xy = state.get_position()
+        cost = state.get_cost()
+        if not self.can_move(xy):
             raise ValueError(f"Invalid position {xy}. Out of bounds or wall.")
         self._visit[xy[1]][xy[0]] = cost
-    
-    def setPath(self, now_state, next_state):
-        now_xy = now_state.getPosition()
-        next_xy = next_state.getPosition()
+
+    def set_path(self, now_state, next_state):
+        now_xy = now_state.get_position()
+        next_xy = next_state.get_position()
         self._path[next_xy[1]][next_xy[0]] = now_xy
-    
+
     def update(self, now_state, next_state):
-        self.setCost(next_state)
-        self.setPath(now_state, next_state)
-    
-    def getStartToGoalPath(self):
+        self.set_cost(next_state)
+        self.set_path(now_state, next_state)
+
+    def get_start_to_goal_path(self):
         path = []
         goal = tuple(self._goal)
         start = tuple(self._start)
@@ -207,29 +215,29 @@ class Visit:
 
         return list(reversed(path))
         
-    def canMove(self, xy):
-        return 0<=xy[1]<self._height and 0<=xy[0]<self._width and self._maze[xy[1]][xy[0]] != 1
-        
-    def printVisit(self):
+    def can_move(self, xy):
+        return (
+            0 <= xy[1] < self._height
+            and 0 <= xy[0] < self._width
+            and self._maze[xy[1]][xy[0]] != 1
+        )
+
+    def print_visit(self):
         for value in self._visit:
             print(value)
 
-    def tryMove(self, now_state, next_state):
+    def try_move(self, now_state, next_state):
         """
         now_state から next_state への遷移が有効で未訪問なら更新する
         戻り値: True=更新した, False=スキップ
         """
-        next_xy = next_state.getPosition()
-        if (not self.canMove(next_xy)) or self.getCost(next_xy) >= 0:
+        next_xy = next_state.get_position()
+        if (not self.can_move(next_xy)) or self.get_cost(next_xy) >= 0:
             return False
         self.update(now_state, next_state)
         return True
 
-    def getVisitMap(self):
-        """訪問コストの2次元配列を返す（内部参照をそのまま返すので編集しないこと）"""
-        return self._visit
-            
-    def getVisitMap(self):
+    def get_visit_map(self):
         """訪問コストの2次元配列を返す（内部参照をそのまま返すので編集しないこと）"""
         return self._visit
             
@@ -241,21 +249,20 @@ def solver(maze, start, goal):
     
     queue = deque()
     start_state = State(start, 0)
-    visit.setCost(start_state)
+    visit.set_cost(start_state)
     queue.append(start_state)
     while queue:
         now_state = queue.popleft()
 
         for dx_dy in directions:
-            next_state = now_state.getNextState(dx_dy)
-            if visit.tryMove(now_state, next_state):
+            next_state = now_state.get_next_state(dx_dy)
+            if visit.try_move(now_state, next_state):
                 queue.append(next_state)
     
-    path = visit.getStartToGoalPath()
-    return visit, path
+    return visit
 
 
-def output_maze_result(workbook, maze, start, goal, visit):
+def output_maze_result(workbook, maze, visit):
     """
     迷路、距離マップ、最短経路をそれぞれ別シートに出力する
     """
@@ -285,11 +292,11 @@ def output_maze_result(workbook, maze, start, goal, visit):
     for y, row in enumerate(maze):
         for x, cell in enumerate(row):
             c = maze_ws.cell(row=y + 1, column=x + 1)
-            if (x, y) == start:
+            if (x, y) == visit.start:
                 c.value = "S"
                 c.fill = start_fill
                 c.font = bold_font
-            elif (x, y) == goal:
+            elif (x, y) == visit.goal:
                 c.value = "G"
                 c.fill = goal_fill
                 c.font = bold_font
@@ -305,7 +312,7 @@ def output_maze_result(workbook, maze, start, goal, visit):
     # Distance シート
     dist_ws = workbook.create_sheet(generate_sheet_names["Distance"])
     dist_ws.sheet_view.showGridLines = False
-    visit_map = visit.getVisitMap()
+    visit_map = visit.get_visit_map()
     max_cost = max(max(row) for row in visit_map if row) or 0
     for y, row in enumerate(visit_map):
         for x, cost in enumerate(row):
@@ -325,19 +332,19 @@ def output_maze_result(workbook, maze, start, goal, visit):
         dist_ws.row_dimensions[row_idx].height = cell_size * 5
 
     # Path シート
-    path_ws = workbook.create_sheet(generate_sheet_names["Distance"])
+    path_ws = workbook.create_sheet(generate_sheet_names["Path"])
     path_ws.sheet_view.showGridLines = False
-    path = visit.getStartToGoalPath()
+    path = visit.get_start_to_goal_path()
     step_lookup = {xy: idx for idx, xy in enumerate(path)}
     for y, row in enumerate(maze):
         for x, cell in enumerate(row):
             coord = (x, y)
             c = path_ws.cell(row=y + 1, column=x + 1)
-            if coord == start:
+            if coord == visit.start:
                 c.value = "S"
                 c.fill = start_fill
                 c.font = bold_font
-            elif coord == goal:
+            elif coord == visit.goal:
                 c.value = "G"
                 c.fill = goal_fill
                 c.font = bold_font
