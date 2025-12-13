@@ -8,14 +8,14 @@ output_dir: "output"
 processors:
   # サマリーシートを追加
   - name: "SummarySheetProcessor"
-    enabled: true
+    enabled: false
     config:
       sheet_name: "Summary"
       position: 0  # 先頭に挿入
 
   # フォーマットを適用
   - name: "FormatProcessor"
-    enabled: true
+    enabled: false
     config:
       header_color: "4472C4"
       font_name: "Arial"
@@ -24,3 +24,9 @@ processors:
       apply_borders: true
       auto_width: true
       exclude_sheets: ["Summary"]  # サマリーシートは除外
+
+  - name: "GenerateMazeProcessor"
+    enabled: true
+    config:
+      height: 255
+      width : 255
