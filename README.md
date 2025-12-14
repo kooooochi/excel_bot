@@ -1,6 +1,8 @@
 # Excel Processor
 
-柔軟でカスタマイズ可能なExcel処理ライブラリ。ローカル実行とGitHub Actionsによる自動処理に対応。
+ローカル実行とGitHub Actionsによる自動処理に対応。
+柔軟でカスタマイズ可能なExcel処理ライブラリ。
+エクセルを使った定型作業をGithub Actionsで自動化するサンプルレポジトリです。
 
 ## 概要
 
